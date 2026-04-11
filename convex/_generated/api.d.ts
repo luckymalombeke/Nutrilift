@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as activities from "../activities.js";
+import type * as food from "../food.js";
+import type * as reminders from "../reminders.js";
 import type * as users from "../users.js";
 
 import type {
@@ -17,6 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activities: typeof activities;
+  food: typeof food;
+  reminders: typeof reminders;
   users: typeof users;
 }>;
 

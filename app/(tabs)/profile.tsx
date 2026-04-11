@@ -5,6 +5,7 @@ import { api } from '@/convex/_generated/api';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -13,36 +14,54 @@ export default function ProfileScreen() {
   const [height, setHeight] = useState('');
   const [activityLevel, setActivityLevel] = useState('moderate');
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState<any>(null);
+  const [storedUserId, setStoredUserId] = useState<string | null>(null);
 
+  // Load User ID from storage
+  useEffect(() => {
+    const getUserId = async () => {
+      const id = await AsyncStorage.getItem('userId');
+      setStoredUserId(id);
+    };
+    getUserId();
+  }, []);
+
+  // Fetch real user data from Convex (UC-02 Foundation)
+  const userData = useQuery(api.users.getUser, storedUserId ? { userId: storedUserId as any } : "skip");
   const updateProfile = useMutation(api.users.updateHealthProfile);
-  // In a real app, we'd get the current user ID from the auth context.
-  // For now, let's assume we've stored it or we query by email.
-  
+
+  // Pre-fill form when data is loaded from Convex
+  useEffect(() => {
+    if (userData) {
+      if (userData.age) setAge(userData.age.toString());
+      if (userData.weight) setWeight(userData.weight.toString());
+      if (userData.height) setHeight(userData.height.toString());
+      if (userData.activityLevel) setActivityLevel(userData.activityLevel);
+    }
+  }, [userData]);
+
   const handleSave = async () => {
     if (!age || !weight || !height) {
-      Alert.alert('Error', 'Please fill in your physical details');
+      Alert.alert('Error', 'Silakan isi rincian fisik kamu');
+      return;
+    }
+
+    if (!storedUserId) {
+      Alert.alert('Info', 'Kamu harus login untuk menyimpan profil secara permanen.');
       return;
     }
 
     setLoading(true);
     try {
-      // For demo purposes, we'll need a real userId. 
-      // If none exists, we'll show an error but the logic is here.
-      if (userId) {
-        await updateProfile({
-          userId,
-          age: parseInt(age),
-          weight: parseFloat(weight),
-          height: parseFloat(height),
-          activityLevel,
-        });
-        Alert.alert('Success', 'Profile updated successfully!');
-      } else {
-        Alert.alert('Info', 'Login required to save profile permanently.');
-      }
+      await updateProfile({
+        userId: storedUserId as any,
+        age: parseInt(age),
+        weight: parseFloat(weight),
+        height: parseFloat(height),
+        activityLevel,
+      });
+      Alert.alert('Berhasil', 'Profil kesehatan berhasil diperbarui!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
+      Alert.alert('Error', 'Gagal memperbarui profil');
     } finally {
       setLoading(false);
     }
@@ -53,93 +72,104 @@ export default function ProfileScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Health Profile</Text>
-          <Text style={styles.subtitle}>Complete your profile for better AI recommendations</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Physical Metrics</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Age</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="25"
-                value={age}
-                onChangeText={setAge}
-                keyboardType="numeric"
-              />
-              <Text style={styles.unit}>years</Text>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Weight</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="70"
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="numeric"
-              />
-              <Text style={styles.unit}>kg</Text>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Height</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="175"
-                value={height}
-                onChangeText={setHeight}
-                keyboardType="numeric"
-              />
-              <Text style={styles.unit}>cm</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Activity Level</Text>
-          <View style={styles.chipContainer}>
-            {['sedentary', 'light', 'moderate', 'active', 'athlete'].map((level) => (
-              <TouchableOpacity
-                key={level}
-                style={[styles.chip, activityLevel === level && styles.selectedChip]}
-                onPress={() => setActivityLevel(level)}
-              >
-                <Text style={[styles.chipText, activityLevel === level && styles.selectedChipText]}>
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.saveButton} 
-          onPress={handleSave}
-          disabled={loading}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={['#10B981', '#064E3B']}
+          style={styles.headerGradient}
         >
-          <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Profile'}</Text>
-        </TouchableOpacity>
+          <Text style={styles.title}>Profil Kesehatan</Text>
+          <Text style={styles.subtitle}>Lengkapi data agar AI NutriLift bisa memberikan rekomendasi terbaik</Text>
+        </LinearGradient>
 
-        <TouchableOpacity 
-          style={styles.logoutButton} 
-          onPress={async () => {
-            await AsyncStorage.removeItem('userEmail');
-            router.replace('/(auth)/register');
-          }}
-        >
-          <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={styles.formContainer}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Metrik Fisik</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Umur</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="25"
+                  value={age}
+                  onChangeText={setAge}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.unit}>Tahun</Text>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Berat Badan</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="70"
+                  value={weight}
+                  onChangeText={setWeight}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.unit}>Kg</Text>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tinggi Badan</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="175"
+                  value={height}
+                  onChangeText={setHeight}
+                  keyboardType="numeric"
+                />
+                <Text style={styles.unit}>Cm</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tingkat Aktivitas</Text>
+            <View style={styles.chipContainer}>
+              {['sedentary', 'light', 'moderate', 'active', 'athlete'].map((level) => (
+                <TouchableOpacity
+                  key={level}
+                  style={[styles.chip, activityLevel === level && styles.selectedChip]}
+                  onPress={() => setActivityLevel(level)}
+                >
+                  <Text style={[styles.chipText, activityLevel === level && styles.selectedChipText]}>
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.saveButton} 
+            onPress={handleSave}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={['#10B981', '#059669']}
+              style={styles.buttonGradient}
+            >
+              <Text style={styles.saveButtonText}>{loading ? 'Menyimpan...' : 'Simpan Profil'}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.logoutButton} 
+            onPress={async () => {
+              await AsyncStorage.removeItem('userEmail');
+              await AsyncStorage.removeItem('userId');
+              router.replace('/(auth)/login');
+            }}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+            <Text style={styles.logoutText}>Keluar Akun</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -148,40 +178,48 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F9FAFB',
   },
   scrollContent: {
-    padding: 20,
-    paddingTop: 60,
+    flexGrow: 1,
   },
-  header: {
-    marginBottom: 30,
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 25,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 5,
+    fontSize: 14,
+    color: '#D1FAE5',
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  formContainer: {
+    padding: 20,
+    marginTop: -20,
   },
   section: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
-    elevation: 2,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: 'bold',
+    color: '#1F2937',
     marginBottom: 15,
   },
   inputGroup: {
@@ -189,81 +227,87 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
+    color: '#6B7280',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 50,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    height: 55,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: '#111827',
+    fontWeight: '600',
   },
   unit: {
-    color: '#999',
+    color: '#6B7280',
     fontSize: 14,
     marginLeft: 10,
+    fontWeight: 'bold',
   },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   chip: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#E5E7EB',
   },
   selectedChip: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
   },
   chipText: {
-    color: '#666',
-    fontSize: 14,
+    color: '#4B5563',
+    fontSize: 13,
+    fontWeight: '600',
   },
   selectedChipText: {
     color: '#fff',
-    fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    height: 56,
+    height: 60,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 10,
+    marginBottom: 15,
+    elevation: 4,
+  },
+  buttonGradient: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
   },
   saveButtonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   logoutButton: {
     flexDirection: 'row',
-    height: 56,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-    borderWidth: 1,
-    borderColor: '#FF3B30',
-    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#FEE2E2',
+    borderRadius: 16,
     marginBottom: 40,
   },
   logoutText: {
     color: '#FF3B30',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });

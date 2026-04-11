@@ -11,6 +11,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const register = useMutation(api.users.register);
   const router = useRouter();
@@ -93,8 +94,15 @@ export default function RegisterScreen() {
                 placeholderTextColor="rgba(255,255,255,0.6)"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                secureTextEntry={!showPassword}
               />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Ionicons 
+                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                  size={20} 
+                  color="rgba(255,255,255,0.7)" 
+                />
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity 

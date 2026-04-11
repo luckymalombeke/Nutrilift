@@ -28,7 +28,7 @@ export const register = mutation({
   },
 });
 
-export const login = query({
+export const login = mutation({
   args: {
     email: v.string(),
     password: v.string(),
@@ -40,10 +40,10 @@ export const login = query({
       .unique();
 
     if (!user || user.password !== args.password) {
-      return null;
+      throw new Error("Email atau kata sandi salah");
     }
 
-    return user;
+    return user; // Return the full user object including _id
   },
 });
 

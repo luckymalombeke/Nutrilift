@@ -17,33 +17,40 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  
+  // State untuk menandai apakah sistem siap (cek login selesai)
   const [isReady, setIsReady] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const segments = useSegments();
   const router = useRouter();
 
+  // Efek ini dijalankan sekali saat aplikasi pertama kali dibuka (Mounting)
   useEffect(() => {
-    const checkAuth = async () => {
-      const user = await AsyncStorage.getItem('userEmail');
-      setIsLoggedIn(!!user);
-      setIsReady(true);
-    };
-    checkAuth();
+    setIsReady(true);
   }, []);
 
+  // SISTEM KEAMANAN (Auth Protector): Mengecek apakah user sudah login atau belum
   useEffect(() => {
-    if (!isReady) return;
+    const checkAuth = async () => {
+      if (!isReady) return;
+      
+      // Mengambil data email dari penyimpanan lokal HP
+      const user = await AsyncStorage.getItem('userEmail');
+      const authStatus = !!user; // Menghasilkan 'true' jika ada data, 'false' jika kosong
+      const inAuthGroup = segments[0] === '(auth)'; // Mengecek apakah user sedang di folder (auth)
 
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!isLoggedIn && !inAuthGroup) {
-      // Redirect to register if not logged in and not in auth screens
-      router.replace('/(auth)/register');
-    } else if (isLoggedIn && inAuthGroup) {
-      // Redirect to tabs if already logged in but in auth screens
-      router.replace('/(tabs)');
-    }
-  }, [isLoggedIn, isReady, segments]);
+      // ALUR PROTEKSI:
+      // 1. Jika BELUM login dan tidak di halaman Login -> Paksa ke halaman Login
+      if (!authStatus && !inAuthGroup) {
+        router.replace('/(auth)/login');
+      } 
+      // 2. Jika SUDAH login tapi masih di halaman Login -> Langsung ke Dashboard
+      else if (authStatus && inAuthGroup) {
+        router.replace('/(tabs)');
+      }
+    };
+    
+    checkAuth();
+  }, [isReady, segments]); // Dijalankan ulang setiap kali layar/rute berubah (segments)
 
   if (!isReady) return null;
 
