@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,18 +17,18 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
-      Alert.alert('Error', 'Please fill all fields');
+      Alert.alert('Error', 'Silakan isi semua kolom');
       return;
     }
     
     setLoading(true);
     try {
       await register({ name, email, password });
-      Alert.alert('Success', 'Account created successfully!', [
-        { text: 'Login Now', onPress: () => router.push('/(auth)/login') }
+      Alert.alert('Berhasil', 'Akun berhasil dibuat!', [
+        { text: 'Login Sekarang', onPress: () => router.push('/(auth)/login') }
       ]);
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Something went wrong');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Terjadi kesalahan');
     } finally {
       setLoading(false);
     }
@@ -39,63 +39,81 @@ export default function RegisterScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join Nutrilift and start your journey</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-            />
+      <Stack.Screen options={{ 
+        title: 'Hai salam sehat !', 
+        headerStyle: { backgroundColor: '#10B981' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' }
+      }} />
+      
+      <LinearGradient
+        colors={['#10B981', '#064E3B']}
+        style={styles.background}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="leaf" size={40} color="#10B981" />
+            </View>
+            <Text style={styles.title}>Buat Akun Baru</Text>
+            <Text style={styles.subtitle}>Mulai perjalanan nutrisi sehatmu hari ini</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Ionicons name="person-outline" size={20} color="#10B981" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Nama Lengkap"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
+            </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={20} color="#10B981" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Alamat Email"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
 
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleRegister}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Register'}</Text>
-          </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={20} color="#10B981" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Kata Sandi"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-              <Text style={styles.linkText}>Login</Text>
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>{loading ? 'Memproses...' : 'Daftar Sekarang'}</Text>
             </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Sudah punya akun? </Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
+                <Text style={styles.linkText}>Login</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 }
@@ -103,7 +121,9 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  background: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -114,15 +134,30 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     alignItems: 'center',
   },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#fff',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#D1FAE5',
+    textAlign: 'center',
   },
   form: {
     gap: 16,
@@ -130,10 +165,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 16,
     paddingHorizontal: 16,
-    height: 56,
+    height: 60,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   inputIcon: {
     marginRight: 12,
@@ -141,38 +178,39 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#1a1a1a',
+    color: '#fff',
   },
   button: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    height: 56,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#4CAF50',
+    marginTop: 10,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 5,
   },
   buttonText: {
-    color: '#fff',
+    color: '#064E3B',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 25,
   },
   footerText: {
-    color: '#666',
+    color: '#D1FAE5',
     fontSize: 14,
   },
   linkText: {
-    color: '#4CAF50',
+    color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });

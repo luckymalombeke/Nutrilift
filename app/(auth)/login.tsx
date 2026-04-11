@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
+import { StyleSheet, TextInput, TouchableOpacity, View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, Dimensions } from 'react-native';
+import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -13,30 +14,19 @@ export default function LoginScreen() {
   
   const router = useRouter();
 
-  // In a real app with Convex, logic for login would be slightly different (usually using Clerk).
-  // Here we use a manual query check for simplicity as requested "data dasar user".
-  // We'll use a mutation to verify or just a query if we're not worried about security in this step.
-  
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill all fields');
+      Alert.alert('Error', 'Silakan isi semua kolom');
       return;
     }
     
     setLoading(true);
     try {
-      // In this simple demo, we'll "fetch" the user and check password.
-      // Note: This is NOT secure for production, only for the demo/Step 1.
-      // Ideally, Convex doesn't allow "guessing" by querying like this without auth.
-      
-      // We will perform the login check via a mutation or custom action in Convex later.
-      // For now, let's assume successful login for development if fields are not empty.
-      
-      // Mocking successful login and saving user session
+      // Mocking successful login for demo
       await AsyncStorage.setItem('userEmail', email);
       router.replace('/(tabs)');
     } catch (error) {
-      Alert.alert('Error', 'Invalid credentials');
+      Alert.alert('Error', 'Email atau kata sandi salah');
     } finally {
       setLoading(false);
     }
@@ -47,52 +37,69 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>Login to Nutrilift</Text>
-        </View>
+      <Stack.Screen options={{ 
+        title: 'Hai salam sehat !', 
+        headerStyle: { backgroundColor: '#10B981' },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' }
+      }} />
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
+      <LinearGradient
+        colors={['#10B981', '#064E3B']}
+        style={styles.background}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="nutrition" size={45} color="#10B981" />
+            </View>
+            <Text style={styles.title}>Selamat Datang!</Text>
+            <Text style={styles.subtitle}>Masuk ke akun NutriLift kamu</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={22} color="#10B981" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Alamat Email"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
 
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
-          </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={22} color="#10B981" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Kata Sandi"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-              <Text style={styles.linkText}>Register</Text>
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>{loading ? 'Memuat...' : 'Masuk Sekarang'}</Text>
             </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Belum punya akun? </Text>
+              <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+                <Text style={styles.linkText}>Daftar Baru</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 }
@@ -100,7 +107,9 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+  },
+  background: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -111,60 +120,84 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     alignItems: 'center',
   },
+  iconCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#fff',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#D1FAE5',
+    textAlign: 'center',
   },
   form: {
-    gap: 16,
+    gap: 18,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 56,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    height: 65,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   inputIcon: {
-    marginRight: 12,
+    marginRight: 15,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#1a1a1a',
+    color: '#fff',
+    fontWeight: '500',
   },
   button: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 12,
-    height: 56,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    height: 65,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    color: '#064E3B',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 30,
   },
   footerText: {
-    color: '#666',
+    color: '#D1FAE5',
     fontSize: 14,
   },
   linkText: {
-    color: '#4CAF50',
+    color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });

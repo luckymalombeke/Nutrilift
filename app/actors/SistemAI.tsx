@@ -1,51 +1,79 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 
 /**
- * Sistem AI
- * → Bagian sistem yang menganalisis data dan kasih rekomendasi (menu, artikel, dll)
- * 
- * NOTE: This is an initial view for project team members to build upon.
+ * Sistem AI - NutriLift AI Intelligence
+ * → Bagian sistem yang menganalisis data dan kasih rekomendasi
  */
 export default function SistemAIScreen() {
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'NutriLift - Sistem AI', headerShown: false }} />
+      <Stack.Screen options={{ title: 'NutriLift - AI', headerShown: false }} />
+      
       <LinearGradient
-        colors={['#8E2DE2', '#4A00E0']}
+        colors={['#064E3B', '#022C22']}
         style={styles.header}
       >
-        <Text style={styles.title}>Analisis Sistem AI</Text>
-        <Text style={styles.subtitle}>Menganalisa data untuk rekomendasi terbaik Anda.</Text>
+        <View style={styles.aiBadge}>
+          <MaterialCommunityIcons name="robot" size={24} color="#10B981" />
+          <Text style={styles.aiBadgeText}>AI ENGINE ACTIVE</Text>
+        </View>
+        <Text style={styles.title}>NutriLift Intelligence</Text>
+        <Text style={styles.subtitle}>Menganalisa pola nutrisi Anda secara real-time.</Text>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          <View style={styles.iconContainer}>
-            <MaterialCommunityIcons name="brain" size={40} color="#8E2DE2" />
-          </View>
-          <Text style={styles.cardTitle}>Engine Rekomendasi</Text>
-          <Text style={styles.cardText}>
-            AI sedang memproses data pengguna untuk menentukan menu makanan dan tips kesehatan yang dipersonalisasi.
-          </Text>
+        <View style={styles.scanCard}>
+          <LinearGradient
+            colors={['rgba(16, 185, 129, 0.1)', 'rgba(6, 78, 59, 0.05)']}
+            style={styles.scanGradient}
+          >
+            <View style={styles.pulseContainer}>
+              <View style={styles.pulseCircle} />
+              <MaterialCommunityIcons name="brain" size={50} color="#10B981" />
+            </View>
+            <Text style={styles.statusTitle}>Scanning Health Data...</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: '65%' }]} />
+            </View>
+          </LinearGradient>
         </View>
 
-        <View style={styles.statRow}>
-          <View style={[styles.statBox, { backgroundColor: '#E3F2FD' }]}>
-            <Text style={styles.statVal}>85%</Text>
-            <Text style={styles.statLabel}>Akurasi</Text>
+        <View style={styles.statsGrid}>
+          <TouchableOpacity style={styles.statCard}>
+            <Text style={styles.statNumber}>124</Text>
+            <Text style={styles.statDesc}>Data Points Analysed</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCard}>
+            <Text style={styles.statNumber}>98%</Text>
+            <Text style={styles.statDesc}>Precision Rate</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.logContainer}>
+          <Text style={styles.logTitle}>Recent AI Actions</Text>
+          <View style={styles.logItem}>
+            <View style={styles.logDot} />
+            <Text style={styles.logText}>Generated meal plan for "Weight Loss"</Text>
           </View>
-          <View style={[styles.statBox, { backgroundColor: '#F3E5F5' }]}>
-            <Text style={styles.statVal}>1.2s</Text>
-            <Text style={styles.statLabel}>Respons</Text>
+          <View style={styles.logItem}>
+            <View style={styles.logDot} />
+            <Text style={styles.logText}>Adjusted calorie goal based on sync data</Text>
           </View>
         </View>
 
         <View style={styles.placeholderCard}>
-          <Text style={styles.placeholderText}>[Tugas Teman Kelompok: Implementasikan Logika AI di Sini]</Text>
+          <LinearGradient
+            colors={['#064E3B', '#065F46']}
+            style={styles.placeholderGradient}
+          >
+            <MaterialCommunityIcons name="code-tags" size={32} color="#34D399" />
+            <Text style={styles.placeholderMainText}>[Tugas Teman Kelompok]</Text>
+            <Text style={styles.placeholderSubText}>Implementasikan Logika AI (Python/ML/Node) di sini.</Text>
+          </LinearGradient>
         </View>
       </ScrollView>
     </View>
@@ -55,85 +83,164 @@ export default function SistemAIScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#022C22', // Darker Green for AI
   },
   header: {
-    padding: 30,
     paddingTop: 60,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingBottom: 40,
+    paddingHorizontal: 25,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
+  aiBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#10B981',
     marginBottom: 20,
+  },
+  aiBadgeText: {
+    color: '#10B981',
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginLeft: 6,
+    letterSpacing: 1,
   },
   title: {
+    color: '#fff',
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
   },
   subtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 5,
+    color: '#A7F3D0',
+    fontSize: 14,
+    marginTop: 8,
+    opacity: 0.8,
   },
   content: {
-    padding: 20,
+    padding: 25,
   },
-  card: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 15,
+  scanCard: {
+    borderRadius: 30,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+    marginBottom: 25,
+  },
+  scanGradient: {
+    padding: 30,
     alignItems: 'center',
   },
-  iconContainer: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 50,
-    marginBottom: 15,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  cardText: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  pulseContainer: {
+    width: 100,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  statBox: {
-    width: '48%',
-    padding: 20,
-    borderRadius: 15,
-    alignItems: 'center',
+  pulseCircle: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: '#10B981',
   },
-  statVal: {
+  statusTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 15,
+  },
+  progressBar: {
+    width: '100%',
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#10B981',
+    borderRadius: 3,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  statCard: {
+    width: '47%',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.1)',
+  },
+  statNumber: {
+    color: '#10B981',
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
+  statDesc: {
+    color: '#A7F3D0',
+    fontSize: 11,
     marginTop: 5,
+    opacity: 0.6,
+  },
+  logContainer: {
+    marginBottom: 30,
+  },
+  logTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  logItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  logDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+    marginRight: 10,
+  },
+  logText: {
+    color: '#D1FAE5',
+    fontSize: 13,
+    opacity: 0.8,
   },
   placeholderCard: {
-    padding: 40,
-    borderStyle: 'dashed',
-    borderWidth: 2,
-    borderColor: '#eee',
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 24,
+    overflow: 'hidden',
   },
-  placeholderText: {
-    color: '#bbb',
+  placeholderGradient: {
+    padding: 30,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#10B981',
+    borderStyle: 'dashed',
+  },
+  placeholderMainText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 15,
+  },
+  placeholderSubText: {
+    color: '#A7F3D0',
+    fontSize: 12,
     textAlign: 'center',
+    marginTop: 5,
+    opacity: 0.7,
   },
 });
