@@ -68,7 +68,7 @@ export default function RemindersScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ 
         title: 'Pengingat Saya',
-        headerStyle: { backgroundColor: '#10B981' },
+        headerStyle: { backgroundColor: '#064E3B' },
         headerTintColor: '#fff'
       }} />
 

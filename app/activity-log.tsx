@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
@@ -24,6 +24,15 @@ export default function ActivityLogScreen() {
   }, []);
 
   const addActivity = useMutation(api.activities.addActivity);
+  const todayActivities = useQuery(api.activities.getTodayActivities, userId ? { userId: userId as any } : "skip");
+
+  // SISTEM PINTAR: Update kalori otomatis saat durasi diketik (8 Kkal / menit)
+  useEffect(() => {
+    if (duration && !isNaN(parseInt(duration))) {
+      const estimatedCalories = parseInt(duration) * 8;
+      setCaloriesBurned(estimatedCalories.toString());
+    }
+  }, [duration]);
 
   const handleSave = async () => {
     if (!activityName || !duration || !caloriesBurned) {
@@ -68,7 +77,7 @@ export default function ActivityLogScreen() {
     >
       <Stack.Screen options={{ 
         title: 'Catat Aktivitas',
-        headerStyle: { backgroundColor: '#10B981' },
+        headerStyle: { backgroundColor: '#064E3B' },
         headerTintColor: '#fff'
       }} />
 
@@ -150,6 +159,37 @@ export default function ActivityLogScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
+
+        {/* RIWAYAT AKTIVITAS HARI INI (UC-05 History) */}
+        <View style={styles.historySection}>
+          <View style={styles.historyHeader}>
+            <Text style={styles.historyTitle}>Riwayat Latihan Hari Ini</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{todayActivities?.length || 0} Sesi</Text>
+            </View>
+          </View>
+
+          {todayActivities && todayActivities.length > 0 ? (
+            todayActivities.map((item, index) => (
+              <View key={index} style={styles.historyCard}>
+                <View style={styles.historyIconBox}>
+                  <Ionicons name="fitness" size={20} color="#10B981" />
+                </View>
+                <View style={styles.historyInfo}>
+                  <Text style={styles.historyName}>{item.activityName}</Text>
+                  <Text style={styles.historyMeta}>{item.duration} Menit • {item.caloriesBurned} Kkal</Text>
+                </View>
+                <Text style={styles.historyTime}>
+                  {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyHistory}>
+              <Text style={styles.emptyHistoryText}>Belum ada latihan hari ini.</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -162,6 +202,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 24,
+    paddingBottom: 50,
   },
   header: {
     marginBottom: 20,
@@ -179,6 +220,7 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 15,
+    marginBottom: 30, // Jarak ke bagian history
   },
   templateGrid: {
     flexDirection: 'row',
@@ -253,5 +295,85 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+
+  // STYLES UNTUK HISTORY SECTION
+  historySection: {
+    marginTop: 10,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  historyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  badge: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  badgeText: {
+    color: '#10B981',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  historyCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  historyIconBox: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  historyInfo: {
+    flex: 1,
+  },
+  historyName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
+  historyMeta: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  historyTime: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  emptyHistory: {
+    padding: 30,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 20,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  emptyHistoryText: {
+    color: '#9CA3AF',
+    fontSize: 14,
   },
 });

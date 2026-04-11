@@ -72,7 +72,7 @@ export default function FoodLogScreen() {
     >
       <Stack.Screen options={{ 
         title: 'Catat Makanan',
-        headerStyle: { backgroundColor: '#10B981' },
+        headerStyle: { backgroundColor: '#064E3B' },
         headerTintColor: '#fff'
       }} />
 

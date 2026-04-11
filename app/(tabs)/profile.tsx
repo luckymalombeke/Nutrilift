@@ -74,7 +74,7 @@ export default function ProfileScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={['#10B981', '#064E3B']}
+          colors={['#065F46', '#064E3B']}
           style={styles.headerGradient}
         >
           <Text style={styles.title}>Profil Kesehatan</Text>
@@ -131,14 +131,20 @@ export default function ProfileScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tingkat Aktivitas</Text>
             <View style={styles.chipContainer}>
-              {['sedentary', 'light', 'moderate', 'active', 'athlete'].map((level) => (
+              {[
+                { id: 'sedentary', label: 'Jarang Gerak' },
+                { id: 'light', label: 'Ringan' },
+                { id: 'moderate', label: 'Sedang' },
+                { id: 'active', label: 'Sangat Aktif' },
+                { id: 'athlete', label: 'Atlet' }
+              ].map((level) => (
                 <TouchableOpacity
-                  key={level}
-                  style={[styles.chip, activityLevel === level && styles.selectedChip]}
-                  onPress={() => setActivityLevel(level)}
+                  key={level.id}
+                  style={[styles.chip, activityLevel === level.id && styles.selectedChip]}
+                  onPress={() => setActivityLevel(level.id)}
                 >
-                  <Text style={[styles.chipText, activityLevel === level && styles.selectedChipText]}>
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  <Text style={[styles.chipText, activityLevel === level.id && styles.selectedChipText]}>
+                    {level.label}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -151,7 +157,7 @@ export default function ProfileScreen() {
             disabled={loading}
           >
             <LinearGradient
-              colors={['#10B981', '#059669']}
+              colors={['#065F46', '#064E3B']}
               style={styles.buttonGradient}
             >
               <Text style={styles.saveButtonText}>{loading ? 'Menyimpan...' : 'Simpan Profil'}</Text>
@@ -187,8 +193,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 40,
     paddingHorizontal: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
   },
   title: {
     fontSize: 28,
@@ -265,8 +271,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   selectedChip: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
+    backgroundColor: '#065F46',
+    borderColor: '#064E3B',
   },
   chipText: {
     color: '#4B5563',

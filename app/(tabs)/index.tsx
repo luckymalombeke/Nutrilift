@@ -61,8 +61,8 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* Header Dashboard Premium */}
-        <LinearGradient colors={['#10B981', '#064E3B']} style={styles.header}>
+        {/* Header Dashboard Premium - Dark Forest Gradient */}
+        <LinearGradient colors={['#065F46', '#064E3B']} style={styles.header}>
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>Halo, {userName}!</Text>
@@ -105,41 +105,28 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Aksi Cepat</Text>
           
           <View style={styles.actionGrid}>
-            {/* Tombol UC-04: Catat Makanan */}
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-              onPress={() => router.push('/food-log')}
-            >
-              <MaterialCommunityIcons name="food-apple" size={28} color="#fff" />
-              <Text style={styles.actionButtonText}>Catat Makan</Text>
-            </TouchableOpacity>
-
-            {/* Tombol UC-05: Catat Aktivitas */}
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#F59E0B' }]}
-              onPress={() => router.push('/activity-log')}
-            >
-              <MaterialIcons name="directions-run" size={28} color="#fff" />
-              <Text style={styles.actionButtonText}>Catat Latihan</Text>
-            </TouchableOpacity>
-
-            {/* Tombol UC-08: Pengingat */}
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
-              onPress={() => router.push('/reminders')}
-            >
-              <Ionicons name="notifications" size={28} color="#fff" />
-              <Text style={styles.actionButtonText}>Pengingat</Text>
-            </TouchableOpacity>
-
-            {/* Tombol UC-03: Rekomendasi AI */}
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#8B5CF6' }]}
-              onPress={() => Alert.alert("Sharon AI", "Sharon sedang meramu rekomendasi untukmu...")}
-            >
-              <MaterialIcons name="psychology" size={28} color="#fff" />
-              <Text style={styles.actionButtonText}>Tanya AI</Text>
-            </TouchableOpacity>
+            {[
+              { title: 'Catat Makan', icon: 'food-apple', lib: 'MaterialCommunityIcons', route: '/food-log' },
+              { title: 'Catat Latihan', icon: 'directions-run', lib: 'MaterialIcons', route: '/activity-log' },
+              { title: 'Pengingat', icon: 'notifications', lib: 'Ionicons', route: '/reminders' },
+              { title: 'Tanya AI', icon: 'psychology', lib: 'MaterialIcons', route: null },
+            ].map((btn, idx) => (
+              <TouchableOpacity 
+                key={idx}
+                style={styles.actionButton}
+                onPress={() => btn.route ? router.push(btn.route as any) : Alert.alert("Sharon AI", "Sharon sedang meramu rekomendasi untukmu...")}
+              >
+                <LinearGradient
+                  colors={['#065F46', '#064E3B']}
+                  style={styles.actionGradient}
+                >
+                  {btn.lib === 'Ionicons' ? <Ionicons name={btn.icon as any} size={28} color="#fff" /> :
+                   btn.lib === 'MaterialIcons' ? <MaterialIcons name={btn.icon as any} size={28} color="#fff" /> :
+                   <MaterialCommunityIcons name={btn.icon as any} size={28} color="#fff" />}
+                  <Text style={styles.actionButtonText}>{btn.title}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
           </View>
 
           {/* Progress Section */}
@@ -185,7 +172,8 @@ const styles = StyleSheet.create({
   content: { padding: 25, marginTop: -20 },
   sectionTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 15 },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 30 },
-  actionButton: { width: (width - 62) / 2, borderRadius: 20, padding: 20, alignItems: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10 },
+  actionButton: { width: (width - 62) / 2, borderRadius: 20, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, overflow: 'hidden' },
+  actionGradient: { flex: 1, padding: 20, alignItems: 'center', justifyContent: 'center' },
   actionButtonText: { color: '#fff', fontSize: 14, fontWeight: 'bold', marginTop: 10 },
   progressSection: { marginBottom: 30 },
   progressCard: { backgroundColor: '#fff', borderRadius: 24, padding: 20, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 },
