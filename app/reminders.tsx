@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, FlatList } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, FlatList, Platform } from 'react-native';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function RemindersScreen() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [newTime, setNewTime] = useState('');
+  const [newTime, setNewTime] = useState('08:00');
   const [newType, setNewType] = useState('minum');
+  const [showPicker, setShowPicker] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
 
   useEffect(() => {
     const getUserId = async () => {
@@ -26,6 +29,17 @@ export default function RemindersScreen() {
   const reminders = useQuery(api.reminders.getReminders, userId ? { userId: userId as any } : "skip");
   const addReminder = useMutation(api.reminders.addReminder);
   const toggleReminder = useMutation(api.reminders.toggleReminder);
+  const completeReminder = useMutation(api.reminders.completeReminder);
+  const deleteReminder = useMutation(api.reminders.deleteReminder);
+
+  const isCompletedToday = (timestamp?: number) => {
+    if (!timestamp) return false;
+    const date = new Date(timestamp);
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
 
   const handleAdd = async () => {
     if (!newTitle || !newTime) {
@@ -49,10 +63,31 @@ export default function RemindersScreen() {
       });
       setModalVisible(false);
       setNewTitle('');
-      setNewTime('');
+      setNewTime('08:00');
     } catch (e) {
       Alert.alert('Error', 'Gagal menyimpan pengingat');
     }
+  };
+
+  const onTimeChange = (event: any, selectedDate?: Date) => {
+    setShowPicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setTempDate(selectedDate);
+      const hours = selectedDate.getHours().toString().padStart(2, '0');
+      const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
+      setNewTime(`${hours}:${minutes}`);
+    }
+  };
+
+  const handleDelete = (id: any) => {
+    Alert.alert(
+      "Hapus Pengingat",
+      "Apakah kamu yakin ingin menghapus pengingat ini?",
+      [
+        { text: "Batal", style: "cancel" },
+        { text: "Hapus", style: "destructive", onPress: () => deleteReminder({ id }) }
+      ]
+    );
   };
 
   const getIcon = (type: string) => {
@@ -83,26 +118,49 @@ export default function RemindersScreen() {
             <Text style={styles.emptySubText}>Klik tombol + untuk menambah baru.</Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.reminderCard}>
-            <View style={[styles.iconBox, { backgroundColor: item.isActive ? '#10B981' : '#9CA3AF' }]}>
-              <MaterialCommunityIcons name={getIcon(item.type)} size={24} color="#fff" />
+        renderItem={({ item }) => {
+          const finishedToday = isCompletedToday(item.completedAt);
+          return (
+            <View style={[styles.reminderCard, finishedToday && styles.completedCard]}>
+              <TouchableOpacity 
+                style={[styles.checkBtn, finishedToday && styles.checkBtnDone]}
+                onPress={() => !finishedToday && completeReminder({ id: item._id })}
+              >
+                <Ionicons 
+                  name={finishedToday ? "checkbox" : "square-outline"} 
+                  size={24} 
+                  color={finishedToday ? "#10B981" : "#D1D5DB"} 
+                />
+              </TouchableOpacity>
+              
+              <View style={[styles.iconBox, { backgroundColor: item.isActive ? '#10B981' : '#9CA3AF' }]}>
+                <MaterialCommunityIcons name={getIcon(item.type)} size={24} color="#fff" />
+              </View>
+              <View style={styles.infoBox}>
+                <Text style={[styles.reminderTitle, finishedToday && styles.completedText]}>{item.title}</Text>
+                <Text style={styles.reminderTime}>{item.time}</Text>
+              </View>
+
+              {/* Tombol Hapus: Muncul jika sudah selesai atau bisa muncul kapan saja */}
+              <TouchableOpacity 
+                onPress={() => handleDelete(item._id)}
+                style={styles.deleteBtn}
+              >
+                <Ionicons name="trash-outline" size={20} color="#EF4444" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                onPress={() => toggleReminder({ id: item._id, isActive: !item.isActive })}
+                style={[styles.toggleBtn, { borderColor: item.isActive ? '#10B981' : '#E5E7EB' }]}
+              >
+                <View style={[styles.toggleCircle, { 
+                  alignSelf: item.isActive ? 'flex-end' : 'flex-start',
+                  backgroundColor: item.isActive ? '#10B981' : '#D1D5DB'
+                }]} />
+              </TouchableOpacity>
             </View>
-            <View style={styles.infoBox}>
-              <Text style={styles.reminderTitle}>{item.title}</Text>
-              <Text style={styles.reminderTime}>{item.time}</Text>
-            </View>
-            <TouchableOpacity 
-              onPress={() => toggleReminder({ id: item._id, isActive: !item.isActive })}
-              style={[styles.toggleBtn, { borderColor: item.isActive ? '#10B981' : '#E5E7EB' }]}
-            >
-              <View style={[styles.toggleCircle, { 
-                alignSelf: item.isActive ? 'flex-end' : 'flex-start',
-                backgroundColor: item.isActive ? '#10B981' : '#D1D5DB'
-              }]} />
-            </TouchableOpacity>
-          </View>
-        )}
+          );
+        }}
       />
 
       <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
@@ -127,14 +185,24 @@ export default function RemindersScreen() {
               onChangeText={setNewTitle}
             />
 
-            <Text style={styles.label}>Jam (Contoh: 08:30)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="08:00"
-              value={newTime}
-              onChangeText={setNewTime}
-              keyboardType="numeric"
-            />
+            <Text style={styles.label}>Waktu (Ketuk untuk pilih)</Text>
+            <TouchableOpacity 
+              style={styles.timePickerBtn} 
+              onPress={() => setShowPicker(true)}
+            >
+              <Ionicons name="time-outline" size={20} color="#10B981" />
+              <Text style={styles.timePickerText}>{newTime}</Text>
+            </TouchableOpacity>
+
+            {showPicker && (
+              <DateTimePicker
+                value={tempDate}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={onTimeChange}
+              />
+            )}
 
             <Text style={styles.label}>Jenis</Text>
             <View style={styles.typeRow}>
@@ -187,15 +255,34 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   iconBox: {
-    width: 50,
-    height: 50,
-    borderRadius: 15,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
   },
+  checkBtn: {
+    marginRight: 10,
+    padding: 5,
+  },
+  checkBtnDone: {
+    opacity: 0.8,
+  },
+  completedCard: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.8,
+  },
+  completedText: {
+    textDecorationLine: 'line-through',
+    color: '#9CA3AF',
+  },
   infoBox: {
     flex: 1,
+  },
+  deleteBtn: {
+    padding: 8,
+    marginRight: 5,
   },
   reminderTitle: {
     fontSize: 16,
@@ -282,6 +369,20 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 16,
     marginBottom: 10,
+  },
+  timePickerBtn: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  timePickerText: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '500',
   },
   typeRow: {
     flexDirection: 'row',

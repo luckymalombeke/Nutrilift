@@ -37,6 +37,7 @@ export default defineSchema({
     time: v.string(), // Format "HH:mm"
     isActive: v.boolean(),
     type: v.string(), // e.g., "makan", "minum", "olahraga"
+    completedAt: v.optional(v.number()), // Timestamp penyelesaian terakhir (untuk track harian)
   }).index("by_user", ["userId"]),
 
   // UC-05: Tracking Aktivitas

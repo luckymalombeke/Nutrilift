@@ -26,6 +26,51 @@ export default function FoodLogScreen() {
     getUserId();
   }, []);
 
+  // DATA KAMUS MAKANAN (Sistem Pintar NutriLift)
+  const foodDatabase: Record<string, { cal: number, prot: number, carb: number, fat: number }> = {
+    'nasi goreng': { cal: 350, prot: 10, carb: 45, fat: 12 },
+    'dada ayam': { cal: 165, prot: 31, carb: 0, fat: 3.6 },
+    'nasi putih': { cal: 130, prot: 2.7, carb: 28, fat: 0.3 },
+    'telur rebus': { cal: 70, prot: 6, carb: 0.6, fat: 5 },
+    'telur goreng': { cal: 90, prot: 6, carb: 0.6, fat: 7 },
+    'pisang': { cal: 89, prot: 1.1, carb: 23, fat: 0.3 },
+    'roti': { cal: 67, prot: 2.4, carb: 13, fat: 1 },
+    'mie instan': { cal: 380, prot: 8, carb: 54, fat: 14 },
+    'sate': { cal: 200, prot: 15, carb: 5, fat: 12 },
+    'tahu': { cal: 76, prot: 8, carb: 1.9, fat: 4.8 },
+    'tempe': { cal: 193, prot: 19, carb: 9, fat: 11 },
+    'susu': { cal: 60, prot: 3.2, carb: 4.8, fat: 3.3 },
+  };
+
+  // LOGIKA SMART CALCULATION (UC-04 Auto-Fill)
+  useEffect(() => {
+    if (foodName.length > 2) {
+      const lowerName = foodName.toLowerCase();
+      let totalCal = 0;
+      let totalProt = 0;
+      let totalCarb = 0;
+      let totalFat = 0;
+      let found = false;
+
+      Object.keys(foodDatabase).forEach(key => {
+        if (lowerName.includes(key)) {
+          totalCal += foodDatabase[key].cal;
+          totalProt += foodDatabase[key].prot;
+          totalCarb += foodDatabase[key].carb;
+          totalFat += foodDatabase[key].fat;
+          found = true;
+        }
+      });
+
+      if (found) {
+        setCalories(totalCal.toString());
+        setProtein(totalProt.toString());
+        setCarbs(totalCarb.toString());
+        setFat(totalFat.toString());
+      }
+    }
+  }, [foodName]);
+
   // Inisialisasi Mutasi: Menyiapkan fungsi untuk "menulis" data ke Convex
   const addLog = useMutation(api.food.addFoodLog);
 

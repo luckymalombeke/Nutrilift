@@ -32,10 +32,26 @@ export const getReminders = query({
   },
 });
 
-// Update status pengingat
+// Update status pengingat (Aktif/Nonaktif)
 export const toggleReminder = mutation({
   args: { id: v.id("reminders"), isActive: v.boolean() },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, { isActive: args.isActive });
+  },
+});
+
+// Tandai pengingat sebagai selesai (untuk hari ini)
+export const completeReminder = mutation({
+  args: { id: v.id("reminders") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { completedAt: Date.now() });
+  },
+});
+
+// Hapus pengingat secara permanen
+export const deleteReminder = mutation({
+  args: { id: v.id("reminders") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
   },
 });

@@ -57,6 +57,24 @@ export default function HomeScreen() {
   const remainingTarget = Math.max(0, calorieTarget - netCalories); // Jangan sampai negatif
   const isTargetAchieved = remainingTarget === 0;
 
+  // 5. LOGIKA TARGET HARIAN DINAMIS (Berdasarkan Penyelesaian Jadwal)
+  const isCompletedToday = (timestamp?: number) => {
+    if (!timestamp) return false;
+    const date = new Date(timestamp);
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+  };
+
+  const activeReminders = reminders?.filter(r => r.isActive) || [];
+  const completedRemindersCount = activeReminders.filter(r => isCompletedToday(r.completedAt)).length;
+  const totalActiveReminders = activeReminders.length;
+  const scheduleProgress = totalActiveReminders > 0 
+    ? Math.round((completedRemindersCount / totalActiveReminders) * 100)
+    : 0;
+
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -131,17 +149,25 @@ export default function HomeScreen() {
 
           {/* Progress Section */}
           <View style={styles.progressSection}>
-            <Text style={styles.sectionTitle}>Laporan Harian</Text>
-            <View style={styles.progressCard}>
+            <Text style={styles.sectionTitle}>Laporan Harian (Jadwal)</Text>
+            <TouchableOpacity 
+              style={styles.progressCard}
+              onPress={() => router.push('/reminders')}
+            >
               <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Target Harian</Text>
-                <Text style={styles.progressValue}>{Math.round((netCalories/calorieTarget)*100)}%</Text>
+                <Text style={styles.progressLabel}>Status Penyelesaian</Text>
+                <Text style={styles.progressValue}>{scheduleProgress}%</Text>
               </View>
               <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { width: `${Math.min((netCalories/calorieTarget)*100, 100)}%` }]} />
+                <View style={[styles.progressBarFill, { width: `${Math.min(scheduleProgress, 100)}%` }]} />
               </View>
-              <Text style={styles.progressSubtext}>Bagus! Kamu sudah mencapai sebagian target nutrisimu.</Text>
-            </View>
+              <Text style={styles.progressSubtext}>
+                {totalActiveReminders === 0 
+                  ? "Belum ada jadwal hari ini. Ayo buat jadwal!" 
+                  : `Kamu sudah menyelesaikan ${completedRemindersCount} dari ${totalActiveReminders} kegiatan.`}
+              </Text>
+              <Text style={styles.clickHint}>Ketuk untuk atur jadwal →</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -183,4 +209,5 @@ const styles = StyleSheet.create({
   progressBarBg: { height: 10, backgroundColor: '#F3F4F6', borderRadius: 5, overflow: 'hidden' },
   progressBarFill: { height: '100%', backgroundColor: '#10B981', borderRadius: 5 },
   progressSubtext: { fontSize: 12, color: '#6B7280', marginTop: 12, lineHeight: 18 },
+  clickHint: { fontSize: 11, color: '#10B981', fontWeight: 'bold', marginTop: 8, textAlign: 'right' },
 });
