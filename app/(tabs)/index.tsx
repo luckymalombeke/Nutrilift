@@ -84,7 +84,7 @@ export default function HomeScreen() {
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.greeting}>Halo, {userName}!</Text>
-              <Text style={styles.headerTitle}>Status Nutrisi</Text>
+              <Text style={styles.headerTitle}>Ini adalah status nutrisi kamu</Text>
             </View>
             <TouchableOpacity style={styles.notificationIcon}>
               <Ionicons name="notifications-outline" size={24} color="#fff" />
