@@ -30,8 +30,8 @@ export default function FoodLogScreen() {
   const [baseNutrients, setBaseNutrients] = useState({ cal: 0, prot: 0, carb: 0, fat: 0 });
 
   const handleUpdatePortion = (amount: number) => {
-    const current = parseFloat(portion) || 1;
-    const next = Math.max(0.5, current + amount);
+    const current = Math.round(parseFloat(portion)) || 1;
+    const next = Math.max(1, current + amount);
     setPortion(next.toString());
   };
 
@@ -104,8 +104,9 @@ export default function FoodLogScreen() {
       let currentPortion = parseFloat(portion) || 1;
       
       if (portionMatch && portionMatch[1]) {
-        currentPortion = parseFloat(portionMatch[1]);
-        setPortion(portionMatch[1]);
+        currentPortion = Math.round(parseFloat(portionMatch[1]));
+        if (currentPortion < 1) currentPortion = 1;
+        setPortion(currentPortion.toString());
       }
 
       // 2. Cari di Database (Mencari match paling spesifik dulu)
@@ -243,17 +244,17 @@ export default function FoodLogScreen() {
             <View style={[styles.inputGroup, { flex: 1 }]}>
               <Text style={styles.label}>Porsi</Text>
               <View style={[styles.inputContainer, { justifyContent: 'space-between', paddingHorizontal: 10 }]}>
-                <TouchableOpacity onPress={() => handleUpdatePortion(-0.5)}>
+                <TouchableOpacity onPress={() => handleUpdatePortion(-1)}>
                   <Ionicons name="remove-circle-outline" size={24} color="#10B981" />
                 </TouchableOpacity>
                 <TextInput
                   style={[styles.input, { textAlign: 'center', fontWeight: 'bold' }]}
                   placeholder="1"
                   value={portion}
-                  onChangeText={setPortion}
-                  keyboardType="numeric"
+                  onChangeText={(val) => setPortion(val.replace(/[^0-9]/g, ''))}
+                  keyboardType="number-pad"
                 />
-                <TouchableOpacity onPress={() => handleUpdatePortion(0.5)}>
+                <TouchableOpacity onPress={() => handleUpdatePortion(1)}>
                   <Ionicons name="add-circle-outline" size={24} color="#10B981" />
                 </TouchableOpacity>
               </View>
