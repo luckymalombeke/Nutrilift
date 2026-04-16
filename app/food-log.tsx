@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
@@ -44,57 +44,14 @@ export default function FoodLogScreen() {
   // State untuk melacak apa yang berhasil dideteksi sistem
   const [detectedFood, setDetectedFood] = useState<string | null>(null);
 
-  // DATA KAMUS MAKANAN (Sistem Pintar NutriLift - Pengetahuan Umum Internet)
-  const foodDatabase: Record<string, { cal: number, prot: number, carb: number, fat: number }> = {
-    // Dasar / Generik (Untuk pencarian cepat)
-    'nasi': { cal: 130, prot: 2.7, carb: 28, fat: 0.3 },
-    'ayam': { cal: 165, prot: 31, carb: 0, fat: 3.6 },
-    'telur': { cal: 70, prot: 6, carb: 0.6, fat: 5 },
-    'daging': { cal: 250, prot: 26, carb: 0, fat: 15 },
-    'ikan': { cal: 150, prot: 22, carb: 0, fat: 6 },
-    'roti': { cal: 67, prot: 2.4, carb: 13, fat: 1 },
-
-    // Karbohidrat Spesifik
-    'nasi putih': { cal: 130, prot: 2.7, carb: 28, fat: 0.3 },
-    'nasi goreng': { cal: 350, prot: 10, carb: 45, fat: 12 },
-    'nasi kuning': { cal: 150, prot: 3, carb: 30, fat: 2 },
-    'nasi uduk': { cal: 160, prot: 3, carb: 28, fat: 4 },
-    'mie instan': { cal: 380, prot: 8, carb: 54, fat: 14 },
-    'roti tawar': { cal: 67, prot: 2.4, carb: 13, fat: 1 },
-    'kentang rebus': { cal: 87, prot: 1.9, carb: 20, fat: 0.1 },
-    'kentang goreng': { cal: 312, prot: 3.4, carb: 41, fat: 15 },
-    'bubur ayam': { cal: 155, prot: 8, carb: 25, fat: 3 },
-
-    // Protein Hewani Spesifik
-    'dada ayam': { cal: 165, prot: 31, carb: 0, fat: 3.6 },
-    'paha ayam': { cal: 209, prot: 26, carb: 0, fat: 11 },
-    'ayam goreng': { cal: 246, prot: 25, carb: 0, fat: 16 },
-    'telur rebus': { cal: 70, prot: 6, carb: 0.6, fat: 5 },
-    'telur goreng': { cal: 90, prot: 6, carb: 0.6, fat: 7 },
-    'telur dadar': { cal: 154, prot: 10, carb: 1, fat: 12 },
-    'rendang': { cal: 195, prot: 22, carb: 4, fat: 10 },
-    'steak sapi': { cal: 271, prot: 25, carb: 0, fat: 19 },
-    'ikan bakar': { cal: 150, prot: 22, carb: 0, fat: 6 },
-    'bakso sapi': { cal: 57, prot: 4, carb: 3, fat: 4 },
-    'sate ayam': { cal: 150, prot: 18, carb: 5, fat: 7 },
-
-    // Nabati, Sayur, Buah, dll
-    'tempe goreng': { cal: 193, prot: 19, carb: 9, fat: 11 },
-    'tahu goreng': { cal: 76, prot: 8, carb: 2, fat: 5 },
-    'pisang': { cal: 89, prot: 1.1, carb: 23, fat: 0.3 },
-    'apel': { cal: 52, prot: 0.3, carb: 14, fat: 0.2 },
-    'alpukat': { cal: 160, prot: 2, carb: 9, fat: 15 },
-    'gado gado': { cal: 132, prot: 5, carb: 15, fat: 7 },
-    'susu sapi': { cal: 61, prot: 3.3, carb: 4.8, fat: 3.3 },
-    'kopi hitam': { cal: 2, prot: 0.1, carb: 0, fat: 0 },
-    'martabak manis': { cal: 340, prot: 6, carb: 45, fat: 15 },
-  };
+  // MENGAMBIL DATA KAMUS MAKANAN DARI CONVEX (UC-04)
+  const convexFoodDictionary = useQuery(api.food.getAllFoodItems) || [];
 
   // LOGIKA SMART CALCULATION (Auto-Fill & Portion Detection)
   useEffect(() => {
     const searchFood = () => {
       const lowerName = foodName.toLowerCase().trim();
-      if (lowerName.length < 2) {
+      if (lowerName.length < 2 || convexFoodDictionary.length === 0) {
         setDetectedFood(null);
         return;
       }
@@ -109,23 +66,31 @@ export default function FoodLogScreen() {
         setPortion(currentPortion.toString());
       }
 
-      // 2. Cari di Database (Mencari match paling spesifik dulu)
-      const sortedKeys = Object.keys(foodDatabase).sort((a, b) => b.length - a.length);
+      // 2. Cari di Kamus Makanan Convex (Mencari match paling spesifik dulu)
+      // Kita sorting berdasarkan panjang nama agar 'nasi goreng' diprioritaskan daripada 'nasi'
+      const sortedDictionary = [...convexFoodDictionary].sort((a, b) => b.name.length - a.name.length);
+      
       let foundData = null;
-      let foundKey = null;
+      let foundName = null;
 
-      for (const key of sortedKeys) {
-        // Jika input mengandung kunci, atau input adalah awalan dari kunci
+      for (const item of sortedDictionary) {
+        const key = item.name.toLowerCase();
+        // Jika input mengandung nama makanan, atau input adalah awalan dari nama makanan
         if (lowerName.includes(key) || (lowerName.length >= 3 && key.startsWith(lowerName))) {
-          foundData = foodDatabase[key];
-          foundKey = key;
+          foundData = item;
+          foundName = item.name;
           break;
         }
       }
 
       if (foundData) {
-        setBaseNutrients(foundData);
-        setDetectedFood(foundKey); // Tampilkan apa yang terdeteksi
+        setBaseNutrients({
+          cal: foundData.cal,
+          prot: foundData.prot,
+          carb: foundData.carb,
+          fat: foundData.fat
+        });
+        setDetectedFood(foundName);
         setCalories(Math.round(foundData.cal * currentPortion).toString());
         setProtein((foundData.prot * currentPortion).toFixed(1));
         setCarbs((foundData.carb * currentPortion).toFixed(1));
@@ -136,7 +101,7 @@ export default function FoodLogScreen() {
     };
 
     searchFood();
-  }, [foodName]);
+  }, [foodName, convexFoodDictionary]);
 
   // Update tampilan saat porsi diubah secara manual via tombol/input porsi
   useEffect(() => {

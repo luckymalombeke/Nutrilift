@@ -19,6 +19,14 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_email", ["email"]),
 
+  foodDictionary: defineTable({
+    name: v.string(), // key name
+    cal: v.number(),
+    prot: v.number(),
+    carb: v.number(),
+    fat: v.number(),
+  }).index("by_name", ["name"]),
+
   foodLogs: defineTable({
     userId: v.id("users"),
     foodName: v.string(),
